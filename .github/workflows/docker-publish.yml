@@ -26,10 +26,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build image
-        run: |
-          docker build -t $REGISTRY/$IMAGE_NAME:latest .
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
-      - name: Push image
-        run: |
-          docker push $REGISTRY/$IMAGE_NAME:latest
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+            push: true
+            tags: ${{ steps.meta.outputs.tags }}
