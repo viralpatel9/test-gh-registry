@@ -1,0 +1,72 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches: [ "main", "develop", "feature/*" ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+            fetch-depth: 0 # Required to see all history/tags
+
+      - name: Get Global Tag and Short SHA
+        id: vars
+        run: |
+          # 1. Ensure the runner sees all tags globally
+          git fetch --tags --force
+
+          # 2. Get the latest tag name by creation date (global search)
+          LATEST_TAG=$(git tag --sort=-creatordate | head -n 1)
+
+          # 3. Fallback if the repo has no tags yet
+          if [ -z "$LATEST_TAG" ]; then
+            LATEST_TAG="v0.0.0"
+          fi
+
+          # 4. Extract 7-character short SHA
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+
+          echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+          echo "sha=$SHORT_SHA" >> $GITHUB_OUTPUT
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Registry
+        uses: docker/login-action@v3
+        with:
+            registry: ${{ env.REGISTRY }}
+            username: ${{ github.actor }}
+            password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+            images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+            tags: |
+                # For 'main' branch: IMAGE:v1.0.3
+                type=raw,value=${{ steps.vars.outputs.tag }},enable=${{ github.ref == 'refs/heads/main' }}
+
+                # For any other branch: IMAGE:v1.0.3-8fc3b8a
+                type=raw,value=${{ steps.vars.outputs.tag }}-${{ steps.vars.outputs.sha }},enable=${{ github.ref != 'refs/heads/main' }}
+
+      - name: Build and Push
+        uses: docker/build-push-action@v5
+        with:
+            context: .
+            push: true
+            tags: ${{ steps.meta.outputs.tags }}
+            labels: ${{ steps.meta.outputs.labels }}
