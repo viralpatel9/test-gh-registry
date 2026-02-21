@@ -19,15 +19,24 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-            fetch-depth: 0
+            fetch-depth: 0 # Required to see all history/tags
 
-      - name: Get Version and Short SHA
+      - name: Get Global Tag and Short SHA
         id: vars
         run: |
-          # 1. Get the latest tag or default to v0.0.0
-          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-          # 2. Get the 7-character short SHA
-          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          # 1. Ensure the runner sees all tags globally
+          git fetch --tags --force
+
+          # 2. Get the latest tag name by creation date (global search)
+          LATEST_TAG=$(git tag --sort=-creatordate | head -n 1)
+
+          # 3. Fallback if the repo has no tags yet
+          if [ -z "$LATEST_TAG" ]; then
+            LATEST_TAG="v0.0.0"
+          fi
+
+          # 4. Extract 7-character short SHA
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
 
           echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
           echo "sha=$SHORT_SHA" >> $GITHUB_OUTPUT
@@ -48,10 +57,10 @@ jobs:
         with:
             images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
             tags: |
-                # If on main: push as 'v1.0.0'
+                # For 'main' branch: IMAGE:v1.0.3
                 type=raw,value=${{ steps.vars.outputs.tag }},enable=${{ github.ref == 'refs/heads/main' }}
 
-                # If NOT on main: push as 'v1.0.0-27d1e74'
+                # For any other branch: IMAGE:v1.0.3-8fc3b8a
                 type=raw,value=${{ steps.vars.outputs.tag }}-${{ steps.vars.outputs.sha }},enable=${{ github.ref != 'refs/heads/main' }}
 
       - name: Build and Push
