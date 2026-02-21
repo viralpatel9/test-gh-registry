@@ -5,11 +5,10 @@ FROM ubuntu:24.04
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install only minimal packages
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        ca-certificates \
-        curl \
-    && rm -rf /var/lib/apt/lists/*
+RUN \
+    apt update && \
+    apt install -y git python3 && \
+    apt install -y cmake gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential
 
 # Default command
 CMD ["bash"]

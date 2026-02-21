@@ -2,7 +2,7 @@ name: Build and Push Docker Image
 
 on:
   push:
-    branches: [ "main", "develop", "feature/*" ]
+    branches: [ "main", "develop" ]
 
 env:
   REGISTRY: ghcr.io
@@ -57,11 +57,11 @@ jobs:
         with:
             images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
             tags: |
-                # For 'main' branch: IMAGE:v1.0.3
-                type=raw,value=${{ steps.vars.outputs.tag }},enable=${{ github.ref == 'refs/heads/main' }}
+                # For 'main' or 'master' branch: IMAGE:v1.0.3
+                type=raw,value=${{ steps.vars.outputs.tag }},enable=${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' }}
 
                 # For any other branch: IMAGE:v1.0.3-8fc3b8a
-                type=raw,value=${{ steps.vars.outputs.tag }}-${{ steps.vars.outputs.sha }},enable=${{ github.ref != 'refs/heads/main' }}
+                type=raw,value=${{ steps.vars.outputs.tag }}-${{ steps.vars.outputs.sha }},enable=${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master' }}
 
       - name: Build and Push
         uses: docker/build-push-action@v5
