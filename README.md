@@ -1,29 +1,43 @@
-# Minimal Ubuntu Docker Image
+# 🚀 Minimal Ubuntu Docker Image
 
-This repo builds a minimal Ubuntu container and publishes it to GitHub Container Registry.
+> This repository builds a minimal Ubuntu container and publishes it to the GitHub Container Registry.
 
-## Build locally
+---
+
+## 🛠️ Build Locally
 
 ```bash
 docker build -t minimal-ubuntu .
 ```
 
-## Run locally
+## ▶️ Run Locally
 
 ```bash
 docker run -it minimal-ubuntu
 ```
 
-## Pull from registry
+## 📦 Pull from GitHub Container Registry
 
 ```bash
-docker pull ghcr.io/<your-username>/<repo-name>:latest
+docker pull ghcr.io/<your-username>/<repo-name>:main
 ```
 
-## How CI Works
+---
 
-When you push to main:
+## 🔄 CI/CD Workflow
 
-1. GitHub Actions builds image
-2. Tags it as latest
-3. Pushes to GHCR
+1. Make changes to your branch.
+2. Create a PR to the `develop` branch, squash and merge.
+3. Create a release tag:
+
+    ```sh
+    git tag -a "v1.x.x" -m "Create Release tag"
+    git push origin v1.x.x
+    ```
+4. When enough changes are in `develop`, create a PR to `main` for production release.
+
+---
+
+## 📚 Resources
+- [GitHub Container Registry Documentation](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)
+- [Docker Documentation](https://docs.docker.com/)
