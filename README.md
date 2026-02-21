@@ -17,13 +17,15 @@ docker run -it minimal-ubuntu
 ## Pull from registry
 
 ```bash
-docker pull ghcr.io/<your-username>/<repo-name>:latest
+docker pull ghcr.io/<your-username>/<repo-name>:main
 ```
 
 ## How CI Works
-
-When you push to main:
-
-1. GitHub Actions builds image
-2. Tags it as latest
-3. Pushes to GHCR
+- Make enough changes to your branch.
+- Create a PR to the `develop`, squash and merge the changes to the `develop`.
+- Create a tag
+    ```sh
+    git tag -a "v1.x.x" -m "Create Release tag"
+    git push origin v1.x.x
+    ```
+- When enough changes to the `develop`, create a PR to `main` branch to do a production release.
